@@ -1,34 +1,59 @@
-<h1>Static Web Apps Database Connections</h1>
-<blockquote>
-    Open the console in the browser developer tools to see the API responses.
-</blockquote>
-<div>
-    <button id="list" onclick="list()">List</button>
-    <button id="get" onclick="get()">Get</button>
-    <button id="update" onclick="update()">Update</button>
-    <button id="create" onclick="create()">Create</button>
-    <button id="delete" onclick="del()">Delete</button>
-</div>
-<script>
-    async function list() {
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cosmos DB Beispiel</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="container">
+        <h1>Namen eingeben</h1>
+        <input type="text" id="nameInput" placeholder="Name eingeben">
+        <button onclick="addName()">Name hinzufügen</button>
+        <h1>Namen anzeigen</h1>
+        <button onclick="getNames()">Namen laden</button>
+        <ul id="namesList"></ul>
+    </div>
 
-  const query = `
-      {
-        people {
-          items {
-            id
-            Name
-          }
+    <script>
+        async function addName() {
+            const name = document.getElementById('nameInput').value;
+            if (!name) return alert('Bitte einen Namen eingeben.');
+
+            const response = await fetch('/api/AddName', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ id: Date.now().toString(), name })
+            });
+
+            if (response.ok) {
+                alert('Name hinzugefügt.');
+                document.getElementById('nameInput').value = '';
+            } else {
+                const error = await response.text();
+                alert('Fehler: ' + error);
+            }
         }
-      }`;
-      
-  const endpoint = "/data-api/graphql";
-  const response = await fetch(endpoint, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query: query })
-  });
-  const result = await response.json();
-  console.table(result.data.people.items);
-}
-</script>
+
+        async function getNames() {
+            const response = await fetch('/api/GetNames');
+            if (response.ok) {
+                const names = await response.json();
+                const namesList = document.getElementById('namesList');
+                namesList.innerHTML = '';
+                names.forEach(item => {
+                    const li = document.createElement('li');
+                    li.textContent = item.name;
+                    namesList.appendChild(li);
+                });
+            } else {
+                const error = await response.text();
+                alert('Fehler: ' + error);
+            }
+        }
+    </script>
+</body>
+</html>
